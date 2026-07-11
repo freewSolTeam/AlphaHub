@@ -42,9 +42,17 @@ type Props = {
   compact?: boolean;
 };
 
-function ListingThumb({ slug, title }: { slug: string; title: string }) {
+function ListingThumb({
+  slug,
+  title,
+  communityImage,
+}: {
+  slug: string;
+  title: string;
+  communityImage: string | null;
+}) {
   return (
-    <ListingCoverImage slug={slug} communityImage={null} alt={title} preferNft fill className="object-cover" />
+    <ListingCoverImage slug={slug} communityImage={communityImage} alt={title} fill className="object-cover" />
   );
 }
 
@@ -66,7 +74,7 @@ export function CommunityListingCard({ project: p, showOperatorHandle = false, c
     return (
       <Link href={`/p/${p.slug}`} className="explore-tile-card group">
         <div className="explore-tile-media">
-          <ListingThumb slug={p.slug} title={p.title} />
+          <ListingThumb slug={p.slug} title={p.title} communityImage={p.communityImage} />
           {isVip ? <span className="explore-tile-badge">VIP</span> : null}
         </div>
 
@@ -115,7 +123,6 @@ export function CommunityListingCard({ project: p, showOperatorHandle = false, c
             slug={p.slug}
             communityImage={p.communityImage}
             alt={p.title}
-            preferNft
             width={40}
             height={40}
             className="h-full w-full object-cover"
