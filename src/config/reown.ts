@@ -1,11 +1,22 @@
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import type { CustomRpcUrlMap } from "@reown/appkit-common";
 import type { AppKitNetwork } from "@reown/appkit/networks";
 import { cookieStorage, createStorage } from "wagmi";
-import { robinhoodChain } from "@/lib/robinhood-chain";
+import { http } from "viem";
+import {
+  getRobinhoodRpcUrl,
+  robinhoodCaipNetworkId,
+  robinhoodChain,
+  robinhoodChainId,
+} from "@/lib/robinhood-chain";
 
 export const reownProjectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID?.trim() ?? "";
 
 export const reownNetworks = [robinhoodChain] as [AppKitNetwork, ...AppKitNetwork[]];
+
+export const robinhoodCustomRpcUrls: CustomRpcUrlMap = {
+  [robinhoodCaipNetworkId]: [{ url: getRobinhoodRpcUrl() }],
+};
 
 export const reownMetadata = {
   name: "AlphaHub",
@@ -22,6 +33,10 @@ export const wagmiAdapter = new WagmiAdapter({
   ssr: true,
   projectId: reownProjectId || "00000000000000000000000000000000",
   networks: reownNetworks,
+  customRpcUrls: robinhoodCustomRpcUrls,
+  transports: {
+    [robinhoodChainId]: http(getRobinhoodRpcUrl()),
+  },
 });
 
 export const wagmiConfig = wagmiAdapter.wagmiConfig;

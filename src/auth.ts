@@ -197,9 +197,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const handle = resolved.handle;
         if (handle) {
-          if (!isXHandleInAllowlist(handle)) {
+          // Allowlist gates standalone X OAuth only — wallet users linking X in Dashboard skip it.
+          const isWalletLinkFlow = Boolean(linkUserId);
+          if (!isWalletLinkFlow && !isXHandleInAllowlist(handle)) {
             console.warn("[auth][x] handle rejected by allowlist:", handle);
-            if (linkUserId) cookieStore.delete(X_LINK_USER_COOKIE);
             return "/auth/error?error=AccessDenied";
           }
 

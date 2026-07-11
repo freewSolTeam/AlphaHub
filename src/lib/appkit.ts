@@ -1,6 +1,6 @@
 "use client";
 
-import { reownMetadata, reownNetworks, reownProjectId, wagmiAdapter } from "@/config/reown";
+import { reownMetadata, reownNetworks, reownProjectId, robinhoodCustomRpcUrls, wagmiAdapter } from "@/config/reown";
 import { robinhoodChain } from "@/lib/robinhood-chain";
 import { createAppKit } from "@reown/appkit/react";
 
@@ -13,6 +13,7 @@ createAppKit({
   projectId: reownProjectId || "00000000000000000000000000000000",
   networks: reownNetworks,
   defaultNetwork: robinhoodChain,
+  customRpcUrls: robinhoodCustomRpcUrls,
   metadata: reownMetadata,
   themeMode: "dark",
   themeVariables: {

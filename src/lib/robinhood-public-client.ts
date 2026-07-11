@@ -1,13 +1,7 @@
-import { robinhoodChain } from "@/lib/robinhood-chain";
+import { getRobinhoodRpcUrl, robinhoodChain } from "@/lib/robinhood-chain";
 import { createPublicClient, http, type PublicClient } from "viem";
 
-export function getRobinhoodRpcUrl(): string {
-  return (
-    process.env.ROBINHOOD_RPC_URL?.trim() ||
-    process.env.NEXT_PUBLIC_ROBINHOOD_RPC?.trim() ||
-    "https://rpc.mainnet.chain.robinhood.com"
-  );
-}
+export { getRobinhoodRpcUrl };
 
 export function createRobinhoodPublicClient(): PublicClient {
   return createPublicClient({

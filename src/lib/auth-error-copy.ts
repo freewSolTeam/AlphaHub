@@ -22,7 +22,8 @@ export const AUTH_ERROR_COPY = {
     title: "X connection not allowed",
     lines: [
       "Your X handle is not on the AlphaHub allowlist yet.",
-      "Add your exact @handle to AUTH_X_ALLOWLIST in .env (no @, comma-separated), restart the dev server, then try again.",
+      "Add your exact handle to AUTH_X_ALLOWLIST (no @, comma-separated) in .env locally or in Vercel → Environment Variables for production, then redeploy.",
+      "If you already linked your wallet, use Dashboard → Settings → Connect with X (not X-only sign-in).",
       "If you cancelled on the X screen, try again and approve access.",
     ],
   },

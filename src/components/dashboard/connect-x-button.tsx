@@ -1,6 +1,5 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -16,15 +15,10 @@ export function ConnectXPanel({ xHandle, hasXAccount, verified }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onConnect() {
+  function onConnect() {
     setError(null);
     setLoading(true);
-    try {
-      await signIn("twitter", { callbackUrl: "/dashboard" });
-    } catch {
-      setError("Could not start X connection.");
-      setLoading(false);
-    }
+    window.location.assign("/api/me/link-x?callbackUrl=/dashboard");
   }
 
   if (hasXAccount && xHandle) {

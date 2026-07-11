@@ -2,7 +2,7 @@
 
 import { useRobinhoodWallet } from "@/hooks/use-robinhood-wallet";
 import { useWalletConnect } from "@/hooks/use-wallet-connect";
-import { robinhoodChain, robinhoodChainId } from "@/lib/robinhood-chain";
+import { getRobinhoodRpcUrl, robinhoodChain, robinhoodChainId } from "@/lib/robinhood-chain";
 import { ALPHA_HUB_CONTRACT_NAME } from "@/lib/robinhood-public-client";
 import { alphahubCheckoutAbi } from "@/lib/alphahub-checkout";
 import { quoteCheckout, type PlatformFeeOverrides } from "@/lib/checkout-quote";
@@ -263,12 +263,9 @@ export function EscrowBuyButton({
             value: gross,
           });
         } else {
-          const rpc =
-            process.env.NEXT_PUBLIC_ROBINHOOD_RPC?.trim() ||
-            "https://rpc.mainnet.chain.robinhood.com";
           const reader = createPublicClient({
             chain: robinhoodChain,
-            transport: http(rpc),
+            transport: http(getRobinhoodRpcUrl()),
           });
           const allowance = await reader.readContract({
             address: USDG_TOKEN_ADDRESS,

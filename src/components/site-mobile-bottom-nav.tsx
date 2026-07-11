@@ -56,22 +56,17 @@ export function SiteMobileBottomNav() {
     >
       <div className="mx-auto flex h-14 max-w-[1728px] items-stretch justify-around px-1 pb-[env(safe-area-inset-bottom,0px)]">
         {NAV_ITEMS.map((item) => {
+          if (item.requiresAuth && !isAuthenticated) return null;
           const active = item.isActive(pathname);
-          const locked = item.requiresAuth && !isAuthenticated;
-          const href = locked ? "/login?callbackUrl=/dashboard" : item.href;
           const Icon = item.icon;
 
           return (
             <Link
               key={item.href}
-              href={href}
+              href={item.href}
               aria-current={active ? "page" : undefined}
               className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 transition ${
-                active
-                  ? "text-brand"
-                  : locked
-                    ? "text-[var(--rh-subtle)]"
-                    : "text-[var(--rh-muted)] active:text-[var(--rh-foreground)]"
+                active ? "text-brand" : "text-[var(--rh-muted)] active:text-[var(--rh-foreground)]"
               }`}
             >
               <Icon

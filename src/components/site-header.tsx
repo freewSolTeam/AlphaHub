@@ -35,15 +35,14 @@ export function SiteHeader() {
 
         <nav className="hidden items-center gap-5 lg:flex" aria-label="Main">
           {NAV.map((item) => {
+            if (item.requiresAuth && !isAuthenticated) return null;
             const active = item.match(pathname);
-            const locked = item.requiresAuth && !isAuthenticated;
-            const href = locked ? "/login?callbackUrl=/dashboard" : item.href;
             return (
               <Link
                 key={item.href}
-                href={href}
+                href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`hyre-nav-link ${active ? "!text-brand" : ""} ${locked ? "opacity-60" : ""}`}
+                className={`hyre-nav-link ${active ? "!text-brand" : ""}`}
               >
                 {item.label}
               </Link>
