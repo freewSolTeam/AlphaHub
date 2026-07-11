@@ -1,0 +1,248 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  /// X handle (no @) — for profile link; set on Twitter sign-in
+  xHandle       String?
+  accounts      Account[]
+  sessions      Session[]
+
+  /// Login wallet (Robinhood Chain) — set on wallet sign-in
+  wallet        String?
+  /// Optional payout wallet for sales proceeds; falls back to `wallet` when empty
+  payoutWallet  String?
+  /// Manual blue checkmark toggle (set by admin in database)
+  blueCheckmark Boolean   @default(false)
+  /// Numeric Telegram user id (from @AlphaHub bot /start) — used to remove from groups when access expires
+  telegramUserId   String?   @unique
+  projects         Project[]
+  telegramLinkTokens TelegramLinkToken[]
+  telegramSetGroupTokens TelegramSetGroupToken[]
+  escrowBuys    EscrowOrder[] @relation("BuyerOrders")
+  escrowSales   EscrowOrder[] @relation("SellerOrders")
+  reportsFiled  ProjectReport[] @relation("ReportsFiled")
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token      String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  shortPitch     String
+  description    String   @default("")
+  groupType      String   @default("PUBLIC")
+  accessType     String   @default("FREE")
+  /// Price for paid access on Robinhood Chain (USDG or ETH)
+  priceAmount    Float?
+  priceCurrency  String?  // USDG | ETH
+  category       String?
+  rules          String   @default("")
+  deliveryPolicy String   @default("")
+  /// Optional community logo for listing cards (`/uploads/...` or public https URL)
+  communityImage String?
+  /// JSON string array: up to 3 image URLs (same rules as communityImage); SQLite — no Prisma Json type
+  detailImages   String?
+  telegram       String?
+  discord        String?
+  launchPlan     String   @default("")
+  expectedLaunch String?
+  launchStatus   String   @default("UPCOMING")
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  published      Boolean  @default(false)
+  /// Public /p/[slug] page views (increments once per request; owner visits excluded in app)
+  viewCount      Int      @default(0)
+  /// Supergroup id (e.g. -1001234567890) for the VIP Telegram group — set by listing owner for auto-kick bot
+  telegramGroupChatId  String?
+  /// Group display name (from Telegram) when @AlphaHub bot sets chat id — for dashboard display; not edited in form
+  telegramGroupTitle   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  escrowOrders   EscrowOrder[]
+  reports        ProjectReport[]
+  /// Multiple access tiers (e.g. 1 week vs 1 month). Currency is shared on Project (priceCurrency).
+  priceOptions   ProjectPriceOption[]
+  telegramSetGroupTokens TelegramSetGroupToken[]
+}
+
+/// One purchasable tier: label + amount in USDG (parent project `priceCurrency`).
+model ProjectPriceOption {
+  id            String  @id @default(cuid())
+  projectId     String
+  /// e.g. "1 week", "1 month", "Season pass"
+  label         String
+  priceAmount   Float
+  sortOrder     Int     @default(0)
+  /// Tier-specific invite (optional; falls back to project.telegram)
+  telegramUrl   String?
+  /// Tier-specific invite (optional; falls back to project.discord)
+  discordUrl    String?
+  /// Access length for this tier; null/0 = no auto-expiry (bots can treat as lifetime)
+  accessDurationDays Int?
+  /// Discord role ID (snowflake) for your bot to grant after payment
+  discordRoleId String?
+  project       Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  escrowOrders  EscrowOrder[]
+
+  @@index([projectId])
+}
+
+model EscrowOrder {
+  id          String   @id @default(cuid())
+  projectId   String
+  buyerId     String
+  sellerId    String
+  amount      Float
+  /// USDG | ETH
+  currency    String
+  /// AWAITING_DEPOSIT | SETTLED | RELEASED (legacy)
+  status      String   @default("AWAITING_DEPOSIT")
+  /// Robinhood Chain (EVM) payout address the buyer pays to (operator wallet, or future escrow contract)
+  escrowPublicKey  String?
+  /// Unused on Robinhood Chain (no server-held key); retained for legacy rows
+  escrowPrivateKey String?
+  /// Buyer payment tx hash on Robinhood Chain once confirmed
+  buyerPaymentSignature  String?
+  /// Settlement tx hash (reserved for future escrow contract split)
+  settlementSignature   String?
+  note        String?
+  /// If buyer chose a price tier, references it (optional for legacy single-price orders).
+  priceOptionId     String?
+  priceOptionLabel  String?
+  /// When paid access ends (from tier `accessDurationDays` at settlement); null = no expiry
+  accessExpiresAt   DateTime?
+  /// Snapshot at SETTLED for links/role if the tier row is edited later
+  grantedTelegramUrl   String?
+  grantedDiscordUrl    String?
+  grantedDiscordRoleId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  releasedAt  DateTime?
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  buyer       User     @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller      User     @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Cascade)
+  priceOption ProjectPriceOption? @relation(fields: [priceOptionId], references: [id], onDelete: SetNull)
+  review      EscrowReview?
+}
+
+/// Buyer feedback on a completed escrow (one per order).
+model EscrowReview {
+  id            String   @id @default(cuid())
+  escrowOrderId String   @unique
+  rating        Int
+  comment       String   @default("")
+  /// Public URL: `/uploads/reviews/...` (optional photo with review)
+  imageUrl      String?
+  createdAt     DateTime @default(now())
+  /// One public reply from the listing operator
+  sellerReply   String   @default("")
+  sellerRepliedAt DateTime?
+  order         EscrowOrder @relation(fields: [escrowOrderId], references: [id], onDelete: Cascade)
+}
+
+/// User-submitted report about a listing.
+model ProjectReport {
+  id         String   @id @default(cuid())
+  projectId  String
+  reporterId String
+  reason     String
+  message    String?
+  status     String   @default("OPEN")
+  createdAt  DateTime @default(now())
+
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reporter User    @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, reporterId])
+  @@index([projectId])
+  @@index([reporterId])
+}
+
+/// One-time deep-link payload for /start?start=link_… to bind Telegram ↔ AlphaHub user
+model TelegramLinkToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// One-time /setgroup <token> in a Telegram group to set Project.telegramGroupChatId
+model TelegramSetGroupToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  userId     String
+  projectId  String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([token])
+}
+
+/// After user opens t.me/…?start=setgroup_<token> in the bot, they can run /setgroup in the group without pasting the token.
+model TelegramSetGroupSession {
+  id              String   @id @default(cuid())
+  /// Telegram user id of whoever opened the deep link (String for bigint ids)
+  telegramUserId  String   @unique
+  token           String
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([token])
+  @@index([expiresAt])
+}
