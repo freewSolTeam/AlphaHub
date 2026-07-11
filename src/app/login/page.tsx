@@ -27,10 +27,6 @@ export default async function LoginPage({ searchParams }: P) {
           <div className="flex justify-center">
             <SiteLogo size="md" />
           </div>
-          <h1 className="mt-8 text-2xl font-semibold tracking-tight text-[var(--landing-text)]">Connect wallet</h1>
-          <p className="mt-2 text-sm text-[var(--landing-muted)]">
-            Sign in with your Robinhood Chain wallet. Link X later in Dashboard for the verified badge.
-          </p>
         </div>
         <div className="mt-8 rounded border border-[var(--landing-border)] bg-[var(--landing-surface)] p-7">
           <SignInWallet callbackUrl={safeCallback} />

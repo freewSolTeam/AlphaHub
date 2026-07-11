@@ -1,21 +1,21 @@
 "use client";
 
+import Image from "next/image";
 import { RobinhoodChainMark } from "@/components/robinhood-chain-mark";
 
 type Brand =
   | { kind: "feather"; name: string }
-  | { kind: "badge"; name: string; letter: string; color: string }
-  | { kind: "coin"; name: string; letter: string; color: string };
+  | { kind: "logo"; name: string; src: string };
 
 const BRANDS: Brand[] = [
   { kind: "feather", name: "Robinhood" },
   { kind: "feather", name: "Robinhood Chain" },
   { kind: "feather", name: "Robinhood Wallet" },
   { kind: "feather", name: "Robinhood Crypto" },
-  { kind: "badge", name: "Arbitrum", letter: "A", color: "#28A0F0" },
-  { kind: "badge", name: "Bitstamp", letter: "B", color: "#16A34A" },
-  { kind: "coin", name: "USDG", letter: "G", color: "#84CC16" },
-  { kind: "coin", name: "Global Dollar", letter: "$", color: "#22C55E" },
+  { kind: "logo", name: "Arbitrum", src: "/brands/arbitrum.svg" },
+  { kind: "logo", name: "Bitstamp", src: "/brands/bitstamp.png" },
+  { kind: "logo", name: "USDG", src: "/brands/usdg.png" },
+  { kind: "logo", name: "Global Dollar", src: "/brands/global-dollar.png" },
 ];
 
 function BrandMark({ brand }: { brand: Brand }) {
@@ -26,22 +26,10 @@ function BrandMark({ brand }: { brand: Brand }) {
       </span>
     );
   }
-  if (brand.kind === "badge") {
-    return (
-      <span
-        className="flex h-7 w-7 shrink-0 items-center justify-center border text-[13px] font-bold"
-        style={{ color: brand.color, borderColor: `${brand.color}55`, background: `${brand.color}1f` }}
-      >
-        {brand.letter}
-      </span>
-    );
-  }
+
   return (
-    <span
-      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-black"
-      style={{ background: brand.color }}
-    >
-      {brand.letter}
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-white/95 p-0.5">
+      <Image src={brand.src} alt="" width={28} height={28} unoptimized className="h-full w-full object-contain" />
     </span>
   );
 }
