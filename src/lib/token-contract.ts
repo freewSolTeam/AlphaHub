@@ -1,5 +1,5 @@
 /** AlphaHub token contract address — separate from the checkout smart contract. */
-export const TOKEN_CA_PLACEHOLDER = "0x······";
+export const TOKEN_CA_PLACEHOLDER = "0x42e837b1a59758728dbde8928f308f1014427777";
 
 export function getTokenContractAddress(): string | null {
   const raw =
