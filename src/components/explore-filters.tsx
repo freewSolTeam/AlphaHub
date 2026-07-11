@@ -41,7 +41,7 @@ const PLATFORM_OPTIONS = [
 const SEARCH_DEBOUNCE_MS = 180;
 const PRICE_DEBOUNCE_MS = 400;
 
-function buildQueryString(v: FilterValues): string {
+function buildQueryString(v: FilterValues, page?: string | null): string {
   const params = new URLSearchParams();
   const q = v.q.trim();
   if (q) params.set("q", q);
@@ -51,7 +51,20 @@ function buildQueryString(v: FilterValues): string {
   if (v.sort !== "newest") params.set("sort", v.sort);
   if (v.minPrice.trim()) params.set("minPrice", v.minPrice.trim());
   if (v.maxPrice.trim()) params.set("maxPrice", v.maxPrice.trim());
+  if (page && page !== "1") params.set("page", page);
   return params.toString();
+}
+
+function filterValuesFromSearchParams(searchParams: URLSearchParams): FilterValues {
+  return {
+    q: searchParams.get("q") ?? "",
+    platform: searchParams.get("platform") ?? "ALL",
+    type: searchParams.get("type") ?? "ALL",
+    access: searchParams.get("access") ?? "ALL",
+    sort: searchParams.get("sort") ?? "newest",
+    minPrice: searchParams.get("minPrice") ?? "",
+    maxPrice: searchParams.get("maxPrice") ?? "",
+  };
 }
 
 function FilterPill({
@@ -135,10 +148,16 @@ export function ExploreFilters({
   }, [query, platformValue, typeValue, accessValue, sortValue, minValue, maxValue]);
 
   const applyIfChanged = useCallback(
-    (next: FilterValues) => {
-      const qs = buildQueryString(next);
+    (next: FilterValues, options?: { resetPage?: boolean }) => {
+      const nextFilterQs = buildQueryString(next);
+      const currentFilterQs = buildQueryString(filterValuesFromSearchParams(searchParams));
+      if (nextFilterQs === currentFilterQs) return;
+
+      const page = options?.resetPage ? null : searchParams.get("page");
+      const qs = buildQueryString(next, page);
       const current = searchParams.toString();
       if (qs === current) return;
+
       startTransition(() => {
         router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
       });
@@ -150,7 +169,7 @@ export function ExploreFilters({
     (patch?: Partial<FilterValues>) => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
       if (priceTimer.current) clearTimeout(priceTimer.current);
-      applyIfChanged({ ...currentValues(), ...patch });
+      applyIfChanged({ ...currentValues(), ...patch }, { resetPage: true });
     },
     [applyIfChanged, currentValues],
   );
@@ -171,7 +190,7 @@ export function ExploreFilters({
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => {
-      applyIfChanged(valuesRef.current);
+      applyIfChanged(valuesRef.current, { resetPage: true });
     }, SEARCH_DEBOUNCE_MS);
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -181,7 +200,7 @@ export function ExploreFilters({
   useEffect(() => {
     if (priceTimer.current) clearTimeout(priceTimer.current);
     priceTimer.current = setTimeout(() => {
-      applyIfChanged(valuesRef.current);
+      applyIfChanged(valuesRef.current, { resetPage: true });
     }, PRICE_DEBOUNCE_MS);
     return () => {
       if (priceTimer.current) clearTimeout(priceTimer.current);

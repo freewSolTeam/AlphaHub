@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { CreatorAvatar } from "@/components/creator-avatar";
+import { ListingCoverImage } from "@/components/listing-cover-image";
 import { formatListingPrice } from "@/lib/listing-price";
 import { PlatformIcons } from "@/components/platform-icons";
 import { XUsername } from "@/components/x-username";
@@ -42,8 +42,10 @@ type Props = {
   compact?: boolean;
 };
 
-function groupInitial(title: string) {
-  return title.trim().charAt(0).toUpperCase() || "C";
+function ListingThumb({ slug, title }: { slug: string; title: string }) {
+  return (
+    <ListingCoverImage slug={slug} communityImage={null} alt={title} preferNft fill className="object-cover" />
+  );
 }
 
 function explorePriceLabel(p: Props["project"], priceOptions: PriceOption[]) {
@@ -64,13 +66,7 @@ export function CommunityListingCard({ project: p, showOperatorHandle = false, c
     return (
       <Link href={`/p/${p.slug}`} className="explore-tile-card group">
         <div className="explore-tile-media">
-          {p.communityImage ? (
-            <Image src={p.communityImage} alt="" fill unoptimized sizes="(max-width:640px) 50vw, 20vw" className="object-cover" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-[var(--rh-surface-elevated)] text-lg font-semibold text-brand">
-              {groupInitial(p.title)}
-            </div>
-          )}
+          <ListingThumb slug={p.slug} title={p.title} />
           {isVip ? <span className="explore-tile-badge">VIP</span> : null}
         </div>
 
@@ -114,13 +110,17 @@ export function CommunityListingCard({ project: p, showOperatorHandle = false, c
   return (
     <Link href={`/p/${p.slug}`} className="explore-listing-card group p-3">
       <div className="flex items-start gap-2.5">
-        {p.communityImage ? (
-          <div className="explore-directory-thumb">
-            <Image src={p.communityImage} alt="" width={40} height={40} unoptimized className="h-full w-full object-cover" />
-          </div>
-        ) : (
-          <div className="explore-directory-thumb explore-directory-thumb--fallback">{groupInitial(p.title)}</div>
-        )}
+        <div className="explore-directory-thumb">
+          <ListingCoverImage
+            slug={p.slug}
+            communityImage={p.communityImage}
+            alt={p.title}
+            preferNft
+            width={40}
+            height={40}
+            className="h-full w-full object-cover"
+          />
+        </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <p className="truncate text-sm font-semibold text-[var(--rh-foreground)]">{p.title}</p>

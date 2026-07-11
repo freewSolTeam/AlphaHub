@@ -24,11 +24,8 @@ export function LandingFooter() {
             <Link href="/docs" className="hyre-footer-link">
               Docs
             </Link>
-            <a href="https://x.com/alphahub_co" target="_blank" rel="noreferrer" className="hyre-footer-link">
+            <a href="https://x.com/alphahub_market" target="_blank" rel="noreferrer" className="hyre-footer-link">
               X
-            </a>
-            <a href="https://t.me/alphahub_co" target="_blank" rel="noreferrer" className="hyre-footer-link">
-              Telegram
             </a>
           </nav>
         </div>
