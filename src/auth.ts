@@ -4,7 +4,6 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Twitter from "next-auth/providers/twitter";
 import { cookies } from "next/headers";
-import { isXHandleInAllowlist } from "@/lib/auth-x-allowlist";
 import { isXBannedOrSuspendedResponse } from "@/lib/auth-error-copy";
 import { reassignTwitterAccountToUser } from "@/lib/link-x-account";
 import { prisma } from "@/lib/prisma";
@@ -197,13 +196,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const handle = resolved.handle;
         if (handle) {
-          // Allowlist gates standalone X OAuth only — wallet users linking X in Dashboard skip it.
-          const isWalletLinkFlow = Boolean(linkUserId);
-          if (!isWalletLinkFlow && !isXHandleInAllowlist(handle)) {
-            console.warn("[auth][x] handle rejected by allowlist:", handle);
-            return "/auth/error?error=AccessDenied";
-          }
-
           const twitterProfile = profile as TwitterProfile | undefined;
           const profileName =
             twitterProfile?.data?.name?.trim() ||
